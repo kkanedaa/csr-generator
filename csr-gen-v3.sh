@@ -4,12 +4,19 @@
 #    Configure the values below     # 
 #-----------------------------------#
 
+# Company information
+
+conf_org="MPKI5000003 - Firma Muster AG"
+conf_state="Glattbrugg"
+conf_locality="Zurich"
+conf_country="CH"
+
 # Config for Email DV
-dv_email="kei.kaneda@swisssign.com"
+dv_email="email@email.com"
 
 # Config for Email OV:
-ov_email="kei.kaneda@swisssign.com"
-ov_cn="Kei Kaneda"
+ov_email="email@email.com"
+ov_cn="Name Surname" #Can also be "pseudo: XYZ"
 
 # Config for TLS:
 tls_cn="kaneda.ch"
@@ -27,10 +34,10 @@ function generate_config() {
     prompt = no
 
     [req_distinguished_name]
-    C = CH
-    ST = Glattbrugg
-    L = ZH
-    O = MPKI5000003 - Firma Muster AG
+    C = ${conf_country}
+    ST = ${conf_state}
+    L = ${conf_locality}
+    O = ${conf_org}
     CN =
     emailAddress =
 
@@ -69,16 +76,16 @@ EOF
 function current_config() {
 
   # Get values in the config file
-  conf_cn=$(grep -i "cn" ${conf_file})
-  conf_san1=$(grep -i "DNS.1" ${conf_file})
-  conf_san2=$(grep -i "DNS.2" ${conf_file})
-  conf_email=$(grep -i "email" ${conf_file})
+  from_conf_cn=$(grep -i "CN =" ${conf_file})
+  from_conf_san1=$(grep -i "DNS.1 =" ${conf_file})
+  from_conf_san2=$(grep -i "DNS.2 =" ${conf_file})
+  from_conf_email=$(grep -i "emailAddress =" ${conf_file})
 
   # check if var is not empty and print value
-  [ -n "$conf_cn" ] && echo -e "${conf_cn}"
-  [ -n "$conf_san1" ] && echo -e "${conf_san1}"
-  [ -n "$conf_san2" ] && echo -e "${conf_san2}"
-  [ -n "$conf_email" ] && echo -e "${conf_email}"
+  [ -n "$from_conf_cn" ] && echo -e "${from_conf_cn}"
+  [ -n "$from_conf_san1" ] && echo -e "${from_conf_san1}"
+  [ -n "$from_conf_san2" ] && echo -e "${from_conf_san2}"
+  [ -n "$from_conf_email" ] && echo -e "${from_conf_email}"
   echo -e "\n"
 }
 
@@ -90,26 +97,29 @@ function generate_csr() {
   current_config
 
   cat ${filename}.csr
-  rm ${conf_file}
   echo -e "\n"
 }
 
 function edit_conf() {
-  echo -e ""
-  read -p "CN: " set_cn
-  read -p "SAN 1: " set_san1
-  read -p "SAN 2: " set_san2
-  read -p "Email: " set_email
 
-  [ -n "$set_cn" ] && sed -i "s/CN =/CN = ${set_cn}/g" ${conf_file} || echo -e "CN cannot be empty."
-  # If SAN1 (DNS.1) is not set, the vlaue will be the one specified in CN
-  [ -n "$set_san1" ] && sed -i "s/DNS.1 =/DNS.1 = ${set_san1}/g" ${conf_file} || sed -i "s/DNS.1 =/DNS.1 = ${set_cn}/g" ${conf_file}
-  [ -n "$set_san2" ] && sed -i "s/DNS.2 =/DNS.2 = ${set_san2}/g" ${conf_file} || sed -i -e "/DNS.2 =/d" ${conf_file}
-  [ -n "$set_email" ] && sed -i "s/emailAddress =/emailAddress = ${set_email}/g" ${conf_file} || sed -i -e "/emailAddress =/d" ${conf_file}
+while true
+  do
+    echo -e ""
+    read -p "CN: " set_cn
+    read -p "SAN 1: " set_san1
+    read -p "SAN 2: " set_san2
+    read -p "Email: " set_email
 
+    if [ -n "$set_cn" ]; then sed -i "s/CN =/CN = ${set_cn}/g" ${conf_file}; else echo -e "\nC'mon dawg, CN cannot be empty."; continue; fi
+    # If SAN1 (DNS.1) is not set, the vlaue will be the one specified in CN
+    [ -n "$set_san1" ] && sed -i "s/DNS.1 =/DNS.1 = ${set_san1}/g" ${conf_file} || sed -i "s/DNS.1 =/DNS.1 = ${set_cn}/g" ${conf_file}
+    [ -n "$set_san2" ] && sed -i "s/DNS.2 =/DNS.2 = ${set_san2}/g" ${conf_file} || sed -i -e "/DNS.2 =/d" ${conf_file}
+    [ -n "$set_email" ] && sed -i "s/emailAddress =/emailAddress = ${set_email}/g" ${conf_file} || sed -i -e "/emailAddress =/d" ${conf_file}
+    break
+  done
 }
 
-conf_file=tmp.conf
+conf_file=/tmp/openssl.conf
 filename=sample
 
 while true
