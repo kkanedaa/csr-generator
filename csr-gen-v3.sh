@@ -23,6 +23,11 @@ tls_cn="kaneda.ch"
 tls_san1="kaneda.ch"
 tls_san2="www.kaneda.ch"
 
+# File names
+
+conf_file=/tmp/openssl.conf
+filename=sample
+
 #-----------------------------------#
 
 function generate_config() {
@@ -119,25 +124,26 @@ while true
   done
 }
 
-conf_file=/tmp/openssl.conf
-filename=sample
+function main() {
+  while true
+  do
+    echo "1. Email DV"
+    echo "2. Email OV"
+    echo "3. TLS"
+    echo -e "4. Custom\n"
+    read -p "Choice: " choice
 
-while true
-do
-  echo "1. Email DV"
-  echo "2. Email OV"
-  echo "3. TLS"
-  echo -e "4. Custom\n"
-  read -p "Choice: " choice
+    case $choice in
+      "1") TYPE="email-dv"; generate_config; generate_csr ${TYPE} ;;
+      "2") TYPE="email-ov"; generate_config; generate_csr ${TYPE} ;;
+      "3") TYPE="tls"; generate_config; generate_csr ${TYPE} ;;
+      "4") TYPE="custom"; generate_config; edit_conf; generate_csr ${TYPE} ;;
+      *) continue ;;
+    esac
 
-  case $choice in
-    "1") TYPE="email-dv"; generate_config; generate_csr ${TYPE} ;;
-    "2") TYPE="email-ov"; generate_config; generate_csr ${TYPE} ;;
-    "3") TYPE="tls"; generate_config; generate_csr ${TYPE} ;;
-    "4") TYPE="custom"; generate_config; edit_conf; generate_csr ${TYPE} ;;
-    *) continue ;;
-  esac
+    break
 
-  break
+  done
+}
 
-done
+main
