@@ -103,6 +103,21 @@ function generate_csr() {
 
   cat ${filename}.csr
   echo -e "\n"
+  print_csr_oneline
+}
+
+function print_csr_oneline() {
+  while true
+    do
+      read -p "Print CSR in one line? y/n: " csr_oneline_yn
+      echo -e "\n"
+      case $csr_oneline_yn in
+        "y") tr -d '\n' < ${filename}.csr; echo -e "\n" ;;
+        "n") break ;;
+        *) break ;;
+      esac
+      break
+    done
 }
 
 function edit_conf() {
